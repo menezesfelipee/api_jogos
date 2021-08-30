@@ -1,6 +1,7 @@
 const express = require("express");
 const mongoose = require("./database");
 const JogoSchema = require("./models/Jogo");
+const func = require("./funcoes");
 
 // Configurações iniciais
 const app = express();
@@ -15,77 +16,53 @@ app.get("/", (req, res) => {
 // Rota para mostrar todos os jogos cadastrados
 app.get("/jogos", async (req, res) => {
     const jogos = await JogoSchema.find();
-    res.status(200).json({ jogos });
+    res.status(200).json(jogos);
 });
 
 // Rota para mostrar um jogo através do ID
 app.get("/jogos/:id", async (req, res) => {
     const id = req.params.id;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-        res.status(422).send({ mensagem: "ID inválido!" });
-        return;
-    };
+    func.validaId(id, res);
 
     const jogo = await JogoSchema.findById(id);
-    if (!jogo) {
-        res.status(404).send({ mensagem: "Jogo não encontrado." });
-        return;
-    };
+    func.validaJogo(jogo, res);
 
-    res.status(200).json({ jogo });
+    res.status(200).json(jogo);
 });
 
 // Rota para adicionar um jogo
 app.post("/jogos", async (req, res) => {
     const jogo = req.body;
-    if (!jogo || !jogo.nome || !jogo.ano || !jogo.imagem) {
-        res.status(400).send({ mensagem: "Campos preenchidos incorretamente." });
-        return;
-    };
+    func.validaJSON(jogo, res);
 
     const novoJogo = await new JogoSchema(jogo).save();
 
-    res.status(201).json({ novoJogo });
+    res.status(201).json(novoJogo);
 });
 
 // Rota para alterar um jogo pelo ID
 app.put("/jogos/:id", async (req, res) => {
     const id = req.params.id;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-        res.status(422).send({ mensagem: "ID inválido!" });
-        return;
-    };
+    func.validaId(id, res);
 
     const jogo = await JogoSchema.findById(id);
-    if (!jogo) {
-        res.status(404).send({ mensagem: "Jogo não encontrado." });
-        return;
-    };
+    func.validaJogo(jogo, res);
 
     let jogoModificado = req.body;
-    if (!jogoModificado || !jogoModificado.nome || !jogoModificado.ano || !jogoModificado.imagem) {
-        res.status(400).send({ mensagem: "Campos preenchidos incorretamente." });
-        return;
-    };
+    func.validaJSON(jogoModificado, res);
     await JogoSchema.findByIdAndUpdate({ _id: id }, jogoModificado);
 
     jogoModificado = await JogoSchema.findById(id);
-    res.status(200).json({ jogoModificado });
+    res.status(200).json(jogoModificado);
 });
 
 // Rota para deletar um jogo pelo ID
 app.delete("/jogos/:id", async (req, res) => {
     const id = req.params.id;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-        res.status(422).send({ mensagem: "ID inválido!" });
-        return;
-    };
+    func.validaId(id, res);
 
     const jogo = await JogoSchema.findById(id);
-    if (!jogo) {
-        res.status(404).send({ mensagem: "Jogo não encontrado." });
-        return;
-    };
+    func.validaJogo(id, res);
 
     await JogoSchema.findByIdAndDelete(id);
     res.status(200).send({ mensagem: "Jogo deletado com sucesso!" });
